@@ -1,0 +1,21 @@
+{
+  "name": "docspace-approval-portal",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "postinstall": "npm --prefix client install",
+    "dev": "node server/src/index.js",
+    "build": "npm --prefix client run build",
+    "check": "node server/src/check.js",
+    "start": "cross-env NODE_ENV=production node server/src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "vite": "^5.4.10"
+  }
+}
+
