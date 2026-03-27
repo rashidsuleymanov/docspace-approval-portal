@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import DocSpaceModal from "../components/DocSpaceModal.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import Modal from "../components/Modal.jsx";
-import QuickActions from "../components/QuickActions.jsx";
 import RequestDetailsModal from "../components/RequestDetailsModal.jsx";
 import StatCard from "../components/StatCard.jsx";
 import StatusPill from "../components/StatusPill.jsx";
@@ -52,7 +51,6 @@ export default function Dashboard({
 
   const hasCurrentProject = Boolean(String(activeRoomId || "").trim());
   const currentProjectTitle = activeProject?.title || "";
-  const currentProjectUrl = activeProject?.roomUrl ? String(activeProject.roomUrl) : "";
   const currentProjectId = activeProject?.id ? String(activeProject.id) : "";
   const updatedLabel = flowsUpdatedAt instanceof Date ? flowsUpdatedAt.toLocaleTimeString() : "";
 
@@ -69,8 +67,7 @@ export default function Dashboard({
   const stats = useMemo(() => {
     const inProgress = assignedFlows.filter((f) => f.status === "InProgress").length;
     const completed = assignedFlows.filter((f) => f.status === "Completed").length;
-    const other = assignedFlows.length - inProgress - completed;
-    return { total: assignedFlows.length, inProgress, completed, other };
+    return { total: assignedFlows.length, inProgress, completed };
   }, [assignedFlows]);
 
   const roomTitleById = useMemo(() => {
@@ -126,6 +123,14 @@ export default function Dashboard({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsGroup, setDetailsGroup] = useState(null);
   const [creatingTemplateId, setCreatingTemplateId] = useState("");
+
+  const [quickStartDismissed, setQuickStartDismissed] = useState(() => {
+    try { return window.localStorage.getItem("portal:quickstart:dismissed") === "1"; } catch { return false; }
+  });
+  const dismissQuickStart = () => {
+    try { window.localStorage.setItem("portal:quickstart:dismissed", "1"); } catch {}
+    setQuickStartDismissed(true);
+  };
 
   const groupFromResult = (result) => {
     const flows = Array.isArray(result?.flows) ? result.flows : result?.flow ? [result.flow] : [];
@@ -215,11 +220,11 @@ export default function Dashboard({
 
     if (!draftsPdfCount) {
       steps.push({
-         title: "Create a template",
-         description: "Make a PDF template in your files.",
-         actionLabel: "New template",
-         onAction: onOpenDrafts
-       });
+        title: "Create a template",
+        description: "Make a PDF template in your files.",
+        actionLabel: "New template",
+        onAction: onOpenDrafts
+      });
     }
 
     if (hasCurrentProject && pdfTemplateCount === 0) {
@@ -242,209 +247,144 @@ export default function Dashboard({
     return steps.slice(0, 4);
   }, [draftsPdfCount, hasCurrentProject, onNewRequest, onOpenDrafts, onOpenProjects, pdfTemplateCount, projectsCount]);
 
-  const showQuickStart = quickStartSteps.length > 0 && (flows?.length === 0 || !hasCurrentProject || pdfTemplateCount === 0 || !draftsPdfCount);
+  const showQuickStart = !quickStartDismissed &&
+    quickStartSteps.length > 0 &&
+    (flows?.length === 0 || !hasCurrentProject || pdfTemplateCount === 0 || !draftsPdfCount);
 
   return (
     <div className="page-shell">
       <header className="topbar" data-tour="home:header">
-        <div>
-          <h2>Home</h2>
-          <p className="muted">
-            Signed in as {userLabel}
+        <div className="topbar-main">
+          <h2 className="topbar-title">Home</h2>
+          <p className="muted" style={{ margin: "4px 0 0" }}>
+            {currentProjectTitle
+              ? <>{currentProjectTitle} · {userLabel}</>
+              : <>Signed in as {userLabel}</>
+            }
           </p>
         </div>
         <div className="topbar-actions">
           {flowsRefreshing ? (
-            <span className="muted" style={{ fontSize: 12 }}>
-              Updating...
-            </span>
+            <span className="muted" style={{ fontSize: 12 }}>Updating…</span>
           ) : updatedLabel ? (
-            <span className="muted" style={{ fontSize: 12 }}>
-              Updated {updatedLabel}
-            </span>
+            <span className="muted" style={{ fontSize: 12 }}>Updated {updatedLabel}</span>
           ) : null}
           <button type="button" onClick={onRefresh} disabled={busy}>
             Refresh
           </button>
-           {hasCurrentProject && currentProjectUrl ? (
-             <a className="btn" href={currentProjectUrl} target="_blank" rel="noreferrer">
-               Open room
-             </a>
-           ) : null}
+          <button type="button" className="primary" onClick={onNewRequest} disabled={busy}>
+            New request
+          </button>
         </div>
       </header>
 
       {error ? <p className="error">{error}</p> : null}
 
-      <div className="dashboard-grid">
-        <div className="dashboard-main">
-          {showQuickStart ? (
-            <div data-tour="home:quickstart">
-              <StepsCard
-                title="Quick start"
-                subtitle="Follow these steps to create your first approval flow."
-                steps={quickStartSteps}
-              />
-            </div>
-          ) : null}
-          <section className="stats-grid">
-            <StatCard title="Projects" value={projectsCount} meta="Project rooms you can access" onClick={onOpenProjects} />
-            <StatCard title="Templates" value={draftsPdfCount} meta="PDF templates in My documents" onClick={onOpenDrafts} />
-            <StatCard title="In progress" value={stats.inProgress} meta="Requests assigned to you" onClick={() => openRequests("inProgress")} />
-            <StatCard title="Completed" value={stats.completed} meta="Requests assigned to you" onClick={() => openRequests("completed")} />
-            <StatCard className="stat-total" title="Total" value={stats.total} meta="Requests assigned to you" onClick={() => openRequests("all")} />
-          </section>
+      <section className="stats-grid" data-tour="home:stats">
+        <StatCard title="Projects" value={projectsCount} onClick={onOpenProjects} />
+        <StatCard title="Templates" value={draftsPdfCount} onClick={onOpenDrafts} />
+        <StatCard title="In progress" value={stats.inProgress} onClick={() => openRequests("inProgress")} />
+        <StatCard title="Completed" value={stats.completed} onClick={() => openRequests("completed")} />
+        <StatCard className="stat-total" title="Total" value={stats.total} onClick={() => openRequests("all")} />
+      </section>
 
-          <section className="card page-card">
-            <div className="card-header compact">
-              <div>
-                <h3>Recent requests</h3>
-                <p className="muted">Requests assigned to you.</p>
-              </div>
-              <div className="card-header-actions">
-                <button type="button" onClick={() => openRequests("all")} disabled={busy}>
-                  View all
-                </button>
-              </div>
-            </div>
-
-            <div className="list scroll-area recent-list">
-              {!recentRequests.length ? (
-                <EmptyState title="No assigned requests yet" description="When someone assigns you a request, it will show up here." />
-              ) : (
-                recentRequests.map((group) => {
-                  const flow = group?.primaryFlow || group?.flows?.[0] || null;
-                  if (!flow?.id) return null;
-                  const roomId = String(flow?.projectRoomId || "").trim();
-                  const roomTitle = roomId ? roomTitleById.get(roomId) || "Project" : "Unassigned";
-                  const dueDate =
-                    String(flow?.dueDate || "").trim() ||
-                    String((Array.isArray(group?.flows) ? group.flows.find((f) => String(f?.dueDate || "").trim())?.dueDate : "") || "").trim();
-                  const todayIso = new Date().toISOString().slice(0, 10);
-                  const isOverdue =
-                    String(flow?.status || "") === "InProgress" && dueDate && /^\d{4}-\d{2}-\d{2}$/.test(dueDate) && dueDate < todayIso;
-                  return (
-                    <div key={group.id} className="list-row">
-                      <div className="list-main">
-                        <strong>{flow.fileTitle || flow.templateTitle || `Template ${flow.templateFileId}`}</strong>
-                        <span className="muted">
-                          {flow.status === "Canceled" ? (
-                            <StatusPill tone="red">Canceled</StatusPill>
-                          ) : flow.status === "InProgress" ? (
-                            <StatusPill tone="yellow">In progress</StatusPill>
-                          ) : flow.status === "Completed" ? (
-                            <StatusPill tone="green">Completed</StatusPill>
-                          ) : (
-                            <StatusPill tone="gray">{flow.status || "-"}</StatusPill>
-                          )}{" "}
-                          <StatusPill tone="gray">{roomTitle}</StatusPill>{" "}
-                          {dueDate ? <StatusPill tone={isOverdue ? "red" : "gray"}>{isOverdue ? `Overdue: ${dueDate}` : `Due: ${dueDate}`}</StatusPill> : null}{" "}
-                          {(flow.createdAt || "").slice(0, 19).replace("T", " ")}
-                        </span>
-                      </div>
-                      <div className="list-actions">
-                        <button
-                          type="button"
-                          onClick={() => openFlow(flow)}
-                          disabled={
-                            !(String(flow?.status || "") === "Completed" ? flow?.resultFileUrl || flow?.openUrl : flow?.openUrl) ||
-                            busy ||
-                            String(flow?.status || "") === "Canceled"
-                          }
-                          title={String(flow?.status || "") === "Canceled" ? "Canceled requests cannot be opened" : ""}
-                        >
-                          {String(flow?.status || "") === "Completed" ? "Open result" : "Open"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDetailsGroup(group);
-                            setDetailsOpen(true);
-                          }}
-                          disabled={busy}
-                        >
-                          Details
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </section>
+      <section className="card page-card">
+        <div className="card-header compact">
+          <h3>Recent requests</h3>
+          <div className="card-header-actions">
+            <button type="button" onClick={() => openRequests("all")} disabled={busy}>
+              View all
+            </button>
+          </div>
         </div>
 
-        <div className="dashboard-side">
-          <div className="quick-actions">
-            <QuickActions
-              hasProject={hasCurrentProject}
-              projectTitle={currentProjectTitle}
-              onOpenProjects={onOpenProjects}
-              onOpenTemplates={onOpenDrafts}
-              onNewRequest={onNewRequest}
-              onOpenCurrentProject={
-                typeof onOpenProject === "function" && currentProjectId ? () => onOpenProject(currentProjectId) : null
-              }
-            />
-          </div>
-          <section className="card compact">
-            <div className="card-header compact">
-              <div>
-                <h3>Current project</h3>
-                <p className="muted">Used for publishing templates and creating requests.</p>
-              </div>
-              <div className="card-header-actions">
-                <button type="button" onClick={onOpenProjects} disabled={busy}>
-                  Change
-                </button>
-              </div>
-            </div>
-            {hasCurrentProject ? (
-              <div className="list" style={{ marginTop: 10 }}>
-                <div className="list-row">
+        <div className="list scroll-area recent-list">
+          {!recentRequests.length ? (
+            <EmptyState title="No assigned requests yet" description="When someone assigns you a request, it will show up here." />
+          ) : (
+            recentRequests.map((group) => {
+              const flow = group?.primaryFlow || group?.flows?.[0] || null;
+              if (!flow?.id) return null;
+              const roomId = String(flow?.projectRoomId || "").trim();
+              const roomTitle = roomId ? roomTitleById.get(roomId) || "Project" : "Unassigned";
+              const dueDate =
+                String(flow?.dueDate || "").trim() ||
+                String((Array.isArray(group?.flows) ? group.flows.find((f) => String(f?.dueDate || "").trim())?.dueDate : "") || "").trim();
+              const todayIso = new Date().toISOString().slice(0, 10);
+              const isOverdue =
+                String(flow?.status || "") === "InProgress" && dueDate && /^\d{4}-\d{2}-\d{2}$/.test(dueDate) && dueDate < todayIso;
+              return (
+                <div key={group.id} className="list-row">
                   <div className="list-main">
-                    <strong className="truncate">{currentProjectTitle || "Untitled"}</strong>
-                    <span className="muted truncate">
-                      <StatusPill tone="green">Current</StatusPill>{" "}
-                      {pdfTemplateCount ? (
-                        <StatusPill tone="gray">{pdfTemplateCount} published template(s)</StatusPill>
+                    <strong>{flow.fileTitle || flow.templateTitle || `Template ${flow.templateFileId}`}</strong>
+                    <span className="muted">
+                      {flow.status === "Canceled" ? (
+                        <StatusPill tone="red">Canceled</StatusPill>
+                      ) : flow.status === "InProgress" ? (
+                        <StatusPill tone="yellow">In progress</StatusPill>
+                      ) : flow.status === "Completed" ? (
+                        <StatusPill tone="green">Completed</StatusPill>
                       ) : (
-                        <StatusPill tone="gray">No published templates</StatusPill>
-                      )}
+                        <StatusPill tone="gray">{flow.status || "-"}</StatusPill>
+                      )}{" "}
+                      <StatusPill tone="gray">{roomTitle}</StatusPill>{" "}
+                      {dueDate ? <StatusPill tone={isOverdue ? "red" : "gray"}>{isOverdue ? `Overdue: ${dueDate}` : `Due: ${dueDate}`}</StatusPill> : null}{" "}
+                      {(flow.createdAt || "").slice(0, 19).replace("T", " ")}
                     </span>
                   </div>
                   <div className="list-actions">
-                    {typeof onOpenProject === "function" && currentProjectId ? (
-                      <button type="button" className="primary" onClick={() => onOpenProject(currentProjectId)} disabled={busy}>
-                        Open
-                      </button>
-                    ) : null}
-                     {currentProjectUrl ? (
-                        <a className="btn" href={currentProjectUrl} target="_blank" rel="noreferrer">
-                          Open room
-                        </a>
-                      ) : null}
+                    <button
+                      type="button"
+                      onClick={() => openFlow(flow)}
+                      disabled={
+                        !(String(flow?.status || "") === "Completed" ? flow?.resultFileUrl || flow?.openUrl : flow?.openUrl) ||
+                        busy ||
+                        String(flow?.status || "") === "Canceled"
+                      }
+                      title={String(flow?.status || "") === "Canceled" ? "Canceled requests cannot be opened" : ""}
+                    >
+                      {String(flow?.status || "") === "Completed" ? "Open result" : "Open"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDetailsGroup(group);
+                        setDetailsOpen(true);
+                      }}
+                      disabled={busy}
+                    >
+                      Details
+                    </button>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <EmptyState
-                title="No project selected"
-                description="Pick a project to publish templates and create requests."
-                actions={
-                  <button type="button" className="primary" onClick={onOpenProjects} disabled={busy}>
-                    Open Projects
-                  </button>
-                }
-              />
-            )}
-          </section>
+              );
+            })
+          )}
         </div>
-      </div>
+      </section>
+
+      {showQuickStart && (
+        <div className="quickstart-wrap" data-tour="home:quickstart">
+          <StepsCard
+            title="Quick start"
+            subtitle="Follow these steps to create your first approval flow."
+            steps={quickStartSteps}
+          />
+          <button
+            type="button"
+            className="quickstart-dismiss"
+            onClick={dismissQuickStart}
+            title="Dismiss"
+            aria-label="Dismiss quick start"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <Modal
         open={sendOpen}
-        title={currentProjectTitle ? `New request \u2014 ${currentProjectTitle}` : "New request"}
+        title={currentProjectTitle ? `New request — ${currentProjectTitle}` : "New request"}
         onClose={() => setSendOpen(false)}
         footer={
           <>
@@ -472,8 +412,8 @@ export default function Dashboard({
                     <strong className="truncate">{t.title || `File ${t.id}`}</strong>
                   </div>
                   <div className="list-actions">
-                      <button
-                        type="button"
+                    <button
+                      type="button"
                       className="primary"
                       onClick={async () => {
                         setCreatingTemplateId(String(t.id || ""));

@@ -32,7 +32,7 @@ function envDefaults() {
   const formsRoomTitle = process.env.DOCSPACE_FORMS_ROOM_TITLE || "Forms Room";
   const projectTemplatesRoomTitle = process.env.DOCSPACE_PROJECT_TEMPLATES_ROOM_TITLE || "Projects Templates";
   const formsRoomTitleFallbacks = normalizeFallbacks(
-    process.env.DOCSPACE_FORMS_ROOM_TITLE_FALLBACKS || "Medical Room,Medical Forms"
+    process.env.DOCSPACE_FORMS_ROOM_TITLE_FALLBACKS || "Sign Room"
   );
   const projectTemplatesRoomTitleFallbacks = normalizeFallbacks(
     process.env.DOCSPACE_PROJECT_TEMPLATES_ROOM_TITLE_FALLBACKS || "Project Templates,Templates"

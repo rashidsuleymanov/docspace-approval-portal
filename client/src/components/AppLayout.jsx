@@ -12,6 +12,27 @@ function initialsFrom(value) {
   return (first + second).toUpperCase();
 }
 
+function Icon({ d, d2 }) {
+  return (
+    <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d={d} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      {d2 && <path d={d2} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />}
+    </svg>
+  );
+}
+
+const NAV_ICONS = {
+  dashboard: <Icon d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" d2="M9 21v-7h6v7" />,
+  requests:  <Icon d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" d2="M14 2v6h6M16 13H8M16 17H8" />,
+  drafts:    <Icon d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" d2="M3 9h18M9 21V9" />,
+  documents: <Icon d="M22 11.08V12a10 10 0 11-5.93-9.14" d2="M22 4L12 14.01l-3-3" />,
+  contacts:  <Icon d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" d2="M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />,
+  settings:  <Icon d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.6 9a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 7a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />,
+  sendDrafts:<Icon d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />,
+  bulk:      <Icon d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />,
+  bulkLinks: <Icon d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" d2="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />,
+};
+
 const navSections = [
   {
     title: "Workspace",
@@ -22,10 +43,6 @@ const navSections = [
       { id: "documents", label: "Results" },
       { id: "contacts", label: "Contacts" }
     ]
-  },
-  {
-    title: "System",
-    items: [{ id: "settings", label: "Settings" }]
   }
 ];
 
@@ -323,6 +340,7 @@ export default function AppLayout({ session, branding, active, onNavigate, onOpe
                     onClick={() => onNavigate(item.id)}
                     data-tour={`nav:${item.id}`}
                   >
+                    {NAV_ICONS[item.id] || null}
                     {item.label}
                   </button>
                 ))}
@@ -361,6 +379,7 @@ export default function AppLayout({ session, branding, active, onNavigate, onOpe
                       onClick={() => onNavigate(item.id)}
                       data-tour={`tools:${item.id}`}
                     >
+                      {NAV_ICONS[item.id] || null}
                       {item.label}
                     </button>
                   ))}

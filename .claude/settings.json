@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(find /d/Workspace/docspace-approval-portal -not -path */node_modules/* -type f)",
-      "Read(//d/Workspace/Stands/docspace-medical-portal/**)"
+      "Read(//d/Workspace/Stands/docspace-medical-portal/**)",
+      "Read(//d D:/Workspace/docspace-approval-portal/client/src/**)",
+      "Bash(find /d/Workspace/Stands/docspace-medical-portal -type f \\\\\\(-name *.conf -o -name docker-compose* -o -name Dockerfile -o -name app.js -o -name server.js -o -name index.js \\\\\\))",
+      "Bash(grep -r \"cors\\\\|proxy\\\\|CORS\" D:/Workspace/docspace-approval-portal/server --include=*.js)"
     ]
   }
 }

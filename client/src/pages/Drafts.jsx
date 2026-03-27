@@ -71,7 +71,7 @@ export default function Drafts({ session, busy, onOpenProject, onOpenProjects, o
   const [requestDueDate, setRequestDueDate] = useState("");
   const [requestBusy, setRequestBusy] = useState(false);
 
-  const [docModal, setDocModal] = useState({ open: false, title: "", url: "" });
+  const [docModal, setDocModal] = useState({ open: false, title: "", url: "", fileId: null });
 
   const refresh = async () => {
     if (!token) return;
@@ -254,7 +254,8 @@ export default function Drafts({ session, busy, onOpenProject, onOpenProjects, o
   const openDoc = (draft) => {
     const url = String(draft?.webUrl || "").trim();
     if (!url) return;
-    setDocModal({ open: true, title: draft?.title || "Template", url });
+    const fileId = draft?.id ? String(draft.id) : null;
+    setDocModal({ open: true, title: draft?.title || "Template", url, fileId });
   };
 
   const startRequestFromSharedTemplate = async (template) => {
@@ -949,7 +950,8 @@ export default function Drafts({ session, busy, onOpenProject, onOpenProjects, o
         open={docModal.open}
         title={docModal.title}
         url={docModal.url}
-        onClose={() => setDocModal({ open: false, title: "", url: "" })}
+        fileId={docModal.fileId}
+        onClose={() => setDocModal({ open: false, title: "", url: "", fileId: null })}
       />
     </div>
   );

@@ -25,7 +25,11 @@ export function loadDocSpaceSdk(src) {
     script.src = `${cleanSrc}/static/scripts/sdk/2.0.0/api.js`;
     script.async = true;
     script.onload = () => resolve(window.DocSpace?.SDK);
-    script.onerror = () => reject(new Error("Failed to load DocSpace SDK"));
+    script.onerror = () => {
+      // Clear cache so retry is possible on next open
+      sdkLoaderPromise = null;
+      reject(new Error("Failed to load DocSpace SDK"));
+    };
     document.head.appendChild(script);
   });
   return sdkLoaderPromise;
