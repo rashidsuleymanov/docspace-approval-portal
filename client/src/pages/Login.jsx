@@ -5,12 +5,11 @@ function normalize(value) {
 }
 
 export default function Login({ branding, busy, error, onLogin, onRegister, onOpenSettings }) {
-  const [mode, setMode] = useState("login"); // "login" | "register"
+  const [mode, setMode] = useState("login");
   const [localError, setLocalError] = useState("");
 
   const portalName = String(branding?.portalName || "").trim() || "Requests Center";
-  const title = mode === "register" ? "Create account" : portalName;
-  const subtitle = mode === "register" ? "Create an account." : "Sign in with your account.";
+  const portalLogoUrl = String(branding?.portalLogoUrl || "").trim();
 
   const canRegister = typeof onRegister === "function";
 
@@ -30,18 +29,9 @@ export default function Login({ branding, busy, error, onLogin, onRegister, onOp
       const email = normalize(form.get("email"));
       const password = normalize(form.get("password"));
       const password2 = normalize(form.get("password2"));
-      if (!email) {
-        setLocalError("Email is required.");
-        return;
-      }
-      if (!password) {
-        setLocalError("Password is required.");
-        return;
-      }
-      if (password !== password2) {
-        setLocalError("Passwords do not match.");
-        return;
-      }
+      if (!email) { setLocalError("Email is required."); return; }
+      if (!password) { setLocalError("Password is required."); return; }
+      if (password !== password2) { setLocalError("Passwords do not match."); return; }
       await onRegister?.({ firstName, lastName, email, password });
       return;
     }
@@ -58,53 +48,71 @@ export default function Login({ branding, busy, error, onLogin, onRegister, onOp
   const displayError = error || localError;
 
   return (
-    <div className="auth-shell">
+    <div className="auth-layout auth-layout-centered">
       <div className="auth-card">
-        <h1 style={{ margin: "0 0 6px" }}>{title}</h1>
-        <p className="muted" style={{ margin: 0 }}>{subtitle}</p>
+        <div className="auth-brand">
+          {portalLogoUrl
+            ? <img src={portalLogoUrl} alt={portalName} className="brand-logo" />
+            : <span className="brand-mark" />
+          }
+          {portalName}
+        </div>
 
-        {displayError ? (
-          <p className="error" style={{ marginTop: 10 }}>
-            {displayError}
-          </p>
-        ) : null}
+        <h1>{mode === "register" ? "Create account" : "Sign in"}</h1>
+
+        {displayError && <div className="error-banner">{displayError}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          {mode === "register" ? (
+          {mode === "register" && (
             <>
               <label>
-                <span>First name</span>
+                First name
                 <input name="firstName" autoComplete="given-name" disabled={busy} />
               </label>
               <label>
-                <span>Last name</span>
+                Last name
                 <input name="lastName" autoComplete="family-name" disabled={busy} />
               </label>
             </>
-          ) : null}
+          )}
 
           <label>
-            <span>Email</span>
-            <input name="email" type="email" autoComplete="email" required disabled={busy} />
-          </label>
-
-          <label>
-            <span>Password</span>
+            Email
             <input
-              name="password"
-              type="password"
-              autoComplete={mode === "register" ? "new-password" : "current-password"}
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
               required
               disabled={busy}
             />
           </label>
 
-          {mode === "register" ? (
+          <label>
+            Password
+            <input
+              name="password"
+              type="password"
+              autoComplete={mode === "register" ? "new-password" : "current-password"}
+              placeholder="Enter your password"
+              required
+              disabled={busy}
+            />
+          </label>
+
+          {mode === "register" && (
             <label>
-              <span>Confirm password</span>
-              <input name="password2" type="password" autoComplete="new-password" required disabled={busy} />
+              Confirm password
+              <input
+                name="password2"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Repeat password"
+                required
+                disabled={busy}
+              />
             </label>
-          ) : null}
+          )}
 
           <button
             type="submit"
@@ -114,35 +122,29 @@ export default function Login({ branding, busy, error, onLogin, onRegister, onOp
           >
             {busy ? "Loading..." : mode === "register" ? "Create account" : "Sign in"}
           </button>
-
-          <div className="auth-switch">
-            {mode === "login" ? (
-              <button
-                type="button"
-                className="link"
-                onClick={() => {
-                  setLocalError("");
-                  setMode("register");
-                }}
-                disabled={busy || !canRegister}
-              >
-                Create account
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="link"
-                onClick={() => {
-                  setLocalError("");
-                  setMode("login");
-                }}
-                disabled={busy}
-              >
-                Back to Sign in
-              </button>
-            )}
-          </div>
         </form>
+
+        <div className="auth-switch">
+          {mode === "login" ? (
+            <button
+              type="button"
+              className="link"
+              onClick={() => { setLocalError(""); setMode("register"); }}
+              disabled={busy || !canRegister}
+            >
+              Create account
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="link"
+              onClick={() => { setLocalError(""); setMode("login"); }}
+              disabled={busy}
+            >
+              Back to Sign in
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

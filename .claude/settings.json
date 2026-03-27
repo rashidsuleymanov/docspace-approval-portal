@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /d/Workspace/docspace-approval-portal -not -path */node_modules/* -type f)",
+      "Read(//d/Workspace/Stands/docspace-medical-portal/**)"
+    ]
+  }
+}

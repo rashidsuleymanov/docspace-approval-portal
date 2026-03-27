@@ -1,36 +1,35 @@
 import { useState } from "react";
 
 export default function StartDemo({ busy, error, onStart, branding }) {
-  const [requesterName, setRequesterName] = useState("");
+  const [requesterName, setRequesterName] = useState("Demo User");
+
+  const portalName = String(branding?.portalName || "").trim() || "Requests Center";
+  const portalLogoUrl = String(branding?.portalLogoUrl || "").trim();
 
   const submit = (event) => {
     event.preventDefault();
     onStart?.({ requesterName: requesterName.trim() || "Demo User" });
   };
 
-  const portalName = branding?.portalName || "Requests Center";
-
   return (
     <div className="auth-layout auth-layout-centered">
       <div className="auth-card">
         <div className="auth-brand">
-          {branding?.portalLogoUrl ? (
-            <img src={branding.portalLogoUrl} alt={portalName} className="brand-logo" />
-          ) : (
-            <span className="brand-mark" />
-          )}
+          {portalLogoUrl
+            ? <img src={portalLogoUrl} alt={portalName} className="brand-logo" />
+            : <span className="brand-mark" />
+          }
           {portalName}
         </div>
-        <h1>Start demo</h1>
-        <p className="muted">
-          This creates an anonymous demo workspace. All data is deleted automatically when the session ends.
-        </p>
+
+        <h1>Try demo</h1>
+
         <form className="auth-form" onSubmit={submit}>
           <label>
-            Your name (optional)
+            Your name
             <input
               type="text"
-              placeholder="Demo User"
+              placeholder="Enter your name"
               value={requesterName}
               onChange={(e) => setRequesterName(e.target.value)}
               disabled={busy}
@@ -38,10 +37,16 @@ export default function StartDemo({ busy, error, onStart, branding }) {
             />
           </label>
           <button className="primary" type="submit" disabled={busy}>
-            {busy ? "Starting..." : "Start demo"}
+            {busy ? "Starting..." : "Continue"}
           </button>
         </form>
+
         {error && <div className="error-banner">{error}</div>}
+
+        <p className="muted start-demo-hint">
+          This is a demonstration stand.<br />
+          No data is saved and will be deleted after the session ends.
+        </p>
       </div>
     </div>
   );
