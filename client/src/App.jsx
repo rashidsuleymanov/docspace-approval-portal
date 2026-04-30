@@ -161,8 +161,8 @@ export default function App() {
         setActiveRoomId("");
         setActiveProject(null);
         setView("start");
-        if (reason === "idle") toast.info("Demo ended after inactivity.");
-        else if (reason === "hidden") toast.info("Demo ended after tab was left in background.");
+        if (reason === "idle") toast("Demo ended after inactivity.");
+        else if (reason === "hidden") toast("Demo ended after tab was left in background.");
       }
     };
 
